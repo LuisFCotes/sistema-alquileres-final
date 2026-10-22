@@ -1,0 +1,23 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Variables de entorno y secretos
+.env
+
+# Editores / sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archivos estáticos recolectados
+staticfiles/
+
+# NOTA: db.sqlite3 se versiona a propósito (entregable con datos de prueba).
