@@ -34,7 +34,7 @@ entidad-relación vive en su propia aplicación Django, y el directorio de confi
 
 ```
 sistema_alquileres/
-├── config/               # settings.py, urls.py, wsgi.py, asgi.py
+├── config/               
 ├── clientes/
 ├── vehiculos/
 ├── alquileres/
@@ -46,7 +46,7 @@ sistema_alquileres/
 ├── requirements.txt      # Django + django-jazzmin
 ├── .gitignore
 ├── README.md
-└── db.sqlite3            # base de datos con datos de prueba
+└── db.sqlite3            # base de datos para probar
 ```
 
 ## Instrucciones de ejecución
@@ -96,3 +96,4 @@ Requisitos: Python 3.10 o superior.
 
 - Luis Felipe Cotes
 - Alana Marcela Lemus Mendoza
+- Samir Iguaran
