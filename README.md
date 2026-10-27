@@ -86,7 +86,7 @@ Requisitos: Python 3.10 o superior.
 
 | Usuario | Clave |
 |---|---|
-| `admin` | `admin123` |
+| `admin` | `luiscotes` |
 
 ## Datos de prueba incluidos
 
