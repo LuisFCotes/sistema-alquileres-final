@@ -1,21 +1,5 @@
 @startuml diagrama_actores
-' ==========================================================================
-' DIAGRAMA DE CASOS DE USO - Sistema de Alquileres de Vehículos
-' Tercer corte (corregido y actualizado).
-'
-' Correcciones frente al segundo corte:
-'   1. Se delimitó con un rectángulo el límite del sistema (antes se confundía
-'      con el panel de administración).
-'   2. Los actores ahora salen de los roles reales del proyecto: se crearon los
-'      grupos "Asistente de alquiler" y "Consulta y reportes" (comando
-'      python manage.py crear_usuarios_demo) y se conservó el superusuario.
-'   3. Cada actor quedó conectado con sus casos de uso y cada actor tiene al
-'      menos tres.
-'   4. Se agregaron los casos de uso de la interfaz web nueva: iniciar/cerrar
-'      sesión, tablero de indicadores, búsqueda y filtros, y el CRUD completo
-'      del proceso de alquiler con sus relaciones (N:M y entidad débil).
-'   5. Se incluyeron los actores secundarios que participan del proceso.
-' ==========================================================================
+
 
 left to right direction
 skinparam actorStyle awesome
@@ -33,14 +17,14 @@ skinparam defaultFontSize 12
 
 title Sistema de Alquileres de Vehículos — Diagrama de casos de uso (3.er corte)
 
-' ---------------------------------- ACTORES --------------------------------
+'  ACTORES
 actor "Asistente de\nalquiler" as ASISTENTE
 actor "Administrador\ndel sistema" as ADMIN
 actor "Analista de\nconsulta" as ANALISTA
 actor "Cliente" as CLIENTE
 actor "Compañía de\nseguros" as ASEGURADORA
 
-' --------------------- LÍMITE DEL SISTEMA (RECTÁNGULO) ----------------------
+' LÍMITE DEL SISTEMA (RECTÁNGULO)
 rectangle "Sistema de Alquileres de Vehículos" as SISTEMA {
 
   usecase "Iniciar sesión" as UC_LOGIN
@@ -75,7 +59,7 @@ rectangle "Sistema de Alquileres de Vehículos" as SISTEMA {
   }
 }
 
-' ------------------------------- RELACIONES ---------------------------------
+' RELACIONES 
 ' Asistente de alquiler: 9 casos de uso (encargado del proceso completo)
 ASISTENTE --> UC_LOGIN
 ASISTENTE --> UC_LOGOUT
