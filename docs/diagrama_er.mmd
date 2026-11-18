@@ -1,0 +1,65 @@
+---
+title: "Sistema de Alquileres de Vehículos — Diagrama Entidad-Relación (3.er corte)"
+---
+erDiagram
+
+	%% ======================================================================
+	%% Tablas = modelos de Django. Nombres de tabla y de columna idénticos a
+	%% los migrations/0001_initial.py del segundo corte (no se cambió el
+	%% esquema). Convención de clases: pk_<tabla>_id, fk_<tabla>_id y prefijo
+	%% de tabla en cada columna (cli_, veh_, alq_, ser_, seg_, ase_).
+	%% ======================================================================
+
+	clientes_cliente {
+		int    pk_cli_id      PK "AutoField(primary_key=True)"
+		varchar cli_nombre        "CharField(100)  nombre"
+		varchar cli_documento  UK "CharField(20)   unique=True"
+		varchar cli_telefono      "CharField(20)"
+	}
+
+	vehiculos_vehiculo {
+		int       pk_veh_id      PK "AutoField(primary_key=True)"
+		varchar   veh_placa      UK "CharField(10)   unique=True"
+		varchar   veh_marca         "CharField(50)"
+		decimal   veh_tarifa_dia    "DecimalField(12,2)"
+	}
+
+	servicios_servicio {
+		int     pk_ser_id      PK "AutoField(primary_key=True)"
+		varchar ser_nombre        "CharField(100)"
+		decimal ser_precio        "DecimalField(12,2)"
+	}
+
+	alquileres_alquiler {
+		int     pk_alq_id       PK "AutoField(primary_key=True)"
+		int     fk_cli_id       FK "PROTECT -> clientes_cliente"
+		int     fk_veh_id       FK "PROTECT -> vehiculos_vehiculo"
+		date    alq_fecha_inicio   "DateField"
+		decimal alq_total          "DecimalField(12,2)"
+	}
+
+	%% Tabla intermedia que resuelve la relación muchos a muchos
+	detalles_alquiler_alquilerservicio {
+		int pk_ase_id       PK "AutoField(primary_key=True)"
+		int fk_alq_id       FK "CASCADE  -> alquileres_alquiler"
+		int fk_ser_id       FK "PROTECT  -> servicios_servicio"
+		int ase_cantidad       "PositiveIntegerField(default=1)"
+	}
+
+	%% Entidad débil: no existe sin un alquiler (1:1, clave ajena obligatoria)
+	seguros_seguro {
+		int     pk_seg_id      PK "AutoField(primary_key=True)"
+		int     fk_alq_id      FK "OneToOne, CASCADE -> alquileres_alquiler"
+		varchar seg_tipo          "CharField(50)"
+		varchar seg_cobertura     "CharField(255)"
+	}
+
+	%% ======================================================================
+	%% Relaciones
+	%% ======================================================================
+
+	clientes_cliente                ||--o{ alquileres_alquiler : "1:N  tiene alquileres"
+	vehiculos_vehiculo              ||--o{ alquileres_alquiler : "1:N  se asigna en"
+	alquileres_alquiler             ||--o{ detalles_alquiler_alquilerservicio : "1:N  detalle (N:M resuelta)"
+	servicios_servicio              ||--o{ detalles_alquiler_alquilerservicio : "1:N  aparece en"
+	alquileres_alquiler             ||--o| seguros_seguro : "1:1  protege  (entidad débil)"

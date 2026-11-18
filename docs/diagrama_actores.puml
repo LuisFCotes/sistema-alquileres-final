@@ -1,0 +1,131 @@
+@startuml diagrama_actores
+' ==========================================================================
+' DIAGRAMA DE CASOS DE USO - Sistema de Alquileres de Vehículos
+' Tercer corte (corregido y actualizado).
+'
+' Correcciones frente al segundo corte:
+'   1. Se delimitó con un rectángulo el límite del sistema (antes se confundía
+'      con el panel de administración).
+'   2. Los actores ahora salen de los roles reales del proyecto: se crearon los
+'      grupos "Asistente de alquiler" y "Consulta y reportes" (comando
+'      python manage.py crear_usuarios_demo) y se conservó el superusuario.
+'   3. Cada actor quedó conectado con sus casos de uso y cada actor tiene al
+'      menos tres.
+'   4. Se agregaron los casos de uso de la interfaz web nueva: iniciar/cerrar
+'      sesión, tablero de indicadores, búsqueda y filtros, y el CRUD completo
+'      del proceso de alquiler con sus relaciones (N:M y entidad débil).
+'   5. Se incluyeron los actores secundarios que participan del proceso.
+' ==========================================================================
+
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #123C5A
+skinparam ActorBorderColor #123C5A
+skinparam ActorBackgroundColor #E6EEF5
+skinparam RectangleBorderColor #123C5A
+skinparam RectangleBackgroundColor #FBFDFE
+skinparam UseCaseBorderColor #1B6CA8
+skinparam UseCaseBackgroundColor #FFFFFF
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+
+title Sistema de Alquileres de Vehículos — Diagrama de casos de uso (3.er corte)
+
+' ---------------------------------- ACTORES --------------------------------
+actor "Asistente de\nalquiler" as ASISTENTE
+actor "Administrador\ndel sistema" as ADMIN
+actor "Analista de\nconsulta" as ANALISTA
+actor "Cliente" as CLIENTE
+actor "Compañía de\nseguros" as ASEGURADORA
+
+' --------------------- LÍMITE DEL SISTEMA (RECTÁNGULO) ----------------------
+rectangle "Sistema de Alquileres de Vehículos" as SISTEMA {
+
+  usecase "Iniciar sesión" as UC_LOGIN
+  usecase "Cerrar sesión" as UC_LOGOUT
+
+  package "Proceso: alquiler de vehículo" {
+    usecase "Registrar alquiler\n(cliente + vehículo + días)" as UC_CREAR
+    usecase "Agregar servicios adicionales\n(Alquiler ↔ Servicio, N:M)" as UC_SERVICIOS
+    usecase "Registrar seguro del alquiler\n(entidad débil 1:1)" as UC_SEGURO
+    usecase "Calcular total del alquiler" as UC_TOTAL
+    usecase "Consultar listado de alquileres" as UC_LISTAR
+    usecase "Buscar y filtrar alquileres" as UC_BUSCAR
+    usecase "Ver ficha del alquiler" as UC_DETALLE
+    usecase "Editar alquiler" as UC_EDITAR
+    usecase "Eliminar alquiler\n(con confirmación)" as UC_ELIMINAR
+    usecase "Ver tablero de indicadores" as UC_TABLERO
+  }
+
+  package "Catálogos del sistema" {
+    usecase "Registrar / editar cliente" as UC_CLI
+    usecase "Eliminar cliente" as UC_CLI_DEL
+    usecase "Registrar / editar vehículo" as UC_VEH
+    usecase "Eliminar vehículo" as UC_VEH_DEL
+    usecase "Registrar / editar servicio" as UC_SRV
+    usecase "Eliminar servicio" as UC_SRV_DEL
+  }
+
+  package "Administración" {
+    usecase "Gestionar usuarios y roles" as UC_ROLES
+    usecase "Acceder al panel de\nadministración (jazzmin)" as UC_ADMINP
+    usecase "Revisar historial de\ncambios (logentry)" as UC_AUDIT
+  }
+}
+
+' ------------------------------- RELACIONES ---------------------------------
+' Asistente de alquiler: 9 casos de uso (encargado del proceso completo)
+ASISTENTE --> UC_LOGIN
+ASISTENTE --> UC_LOGOUT
+ASISTENTE --> UC_CREAR
+ASISTENTE --> UC_SERVICIOS
+ASISTENTE --> UC_SEGURO
+ASISTENTE --> UC_EDITAR
+ASISTENTE --> UC_LISTAR
+ASISTENTE --> UC_CLI
+
+' Analista de consulta: solo lectura (5 casos de uso)
+ANALISTA --> UC_LOGIN
+ANALISTA --> UC_LISTAR
+ANALISTA --> UC_BUSCAR
+ANALISTA --> UC_DETALLE
+ANALISTA --> UC_TABLERO
+
+' Administrador: hereda los casos del asistente + 4 propios
+ADMIN --|> ASISTENTE
+ADMIN --> UC_ROLES
+ADMIN --> UC_ADMINP
+ADMIN --> UC_AUDIT
+ADMIN --> UC_VEH
+ADMIN --> UC_SRV
+ADMIN --> UC_VEH_DEL
+ADMIN --> UC_SRV_DEL
+ADMIN --> UC_CLI_DEL
+
+' Inclusión: el registro del alquiler siempre calcula el total y puede tomar
+' servicios y seguro
+UC_CREAR ..> UC_TOTAL : <<include>>
+UC_CREAR ..> UC_SERVICIOS : <<extend>>
+UC_CREAR ..> UC_SEGURO : <<extend>>
+UC_EDITAR ..> UC_TOTAL : <<include>>
+
+' Actores secundarios (participan del proceso, no usan la pantalla)
+CLIENTE --> UC_CREAR : "sus datos\nse registran"
+CLIENTE --> UC_CLI
+CLIENTE --> UC_SEGURO : "toma la\npóliza"
+ASEGURADORA --> UC_SEGURO : "emite la\ncobertura"
+ASEGURADORA --> UC_EDITAR : "modifica\ncobertura"
+ASEGURADORA --> UC_ELIMINAR : "cancela\nla póliza"
+
+note bottom of SISTEMA
+  Permisos por rol (Django auth):
+  - Asistente de alquiler: view + add + change
+  - Consulta y reportes: solo view
+  - Superusuario: todo, incluido /admin/
+  Eliminar está reservado al superusuario
+  (vista con PermissionRequiredMixin -> 403).
+end note
+
+@enduml

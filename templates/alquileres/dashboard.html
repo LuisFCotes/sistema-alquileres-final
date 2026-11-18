@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static alquileres_extras %}
+
+{% block title %}Tablero{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-speedometer2 me-1"></i> Tablero de alquileres</h1>
+    <p class="texto-suave mb-0">Hola, {{ user.get_full_name|default:user.get_username }}: resumen del negocio hoy.</p>
+  </div>
+  {% if perms.alquileres.add_alquiler %}
+  <a class="btn btn-acento" href="{% url 'alquileres:registrar' %}">
+    <i class="bi bi-plus-lg"></i> Registrar alquiler
+  </a>
+  {% endif %}
+</div>
+
+{# ---------------------------------- KPI ---------------------------------- #}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="card kpi h-100"><div class="card-body d-flex justify-content-between align-items-start">
+      <div><div class="etiqueta">Alquileres</div><div class="valor">{{ total_alquileres }}</div>
+        <div class="texto-suave small">{{ con_seguro }} con seguro · {{ sin_seguro }} sin seguro</div></div>
+      <i class="bi bi-file-earmark-text"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card kpi kpi-exito h-100"><div class="card-body d-flex justify-content-between align-items-start">
+      <div><div class="etiqueta">Ingresos totales</div><div class="valor">{{ ingresos_totales|pesos }}</div>
+        <div class="texto-suave small">Este mes: {{ ingresos_mes|pesos }}</div></div>
+      <i class="bi bi-cash-stack"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card kpi kpi-acento h-100"><div class="card-body d-flex justify-content-between align-items-start">
+      <div><div class="etiqueta">Vehículos en flota</div><div class="valor">{{ total_vehiculos }}</div>
+        <div class="texto-suave small">{{ total_clientes }} clientes registrados</div></div>
+      <i class="bi bi-car-front"></i>
+    </div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="card kpi h-100"><div class="card-body d-flex justify-content-between align-items-start">
+      <div><div class="etiqueta">Servicios</div><div class="valor">{{ total_servicios }}</div>
+        <div class="texto-suave small">en el catálogo de adicionales</div></div>
+      <i class="bi bi-cone-striped"></i>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# -------------------------- GRÁFICO POR MESES --------------------------- #}
+  <div class="col-12 col-xl-7">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-bar-chart-line"></i> Alquileres e ingresos por mes</div>
+      <div class="card-body">
+        <canvas id="grafico-meses" height="120"></canvas>
+        <div class="form-text text-center mt-2">Últimos 6 meses, según la fecha de inicio del alquiler.</div>
+      </div>
+    </div>
+  </div>
+
+  {# MARCAS MÁS ALQUILADAS  #}
+  <div class="col-12 col-xl-5">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-trophy"></i> Marcas más alquiladas</div>
+      <div class="card-body">
+        {% for fila in por_marca %}
+          <div class="d-flex justify-content-between small">
+            <span class="fw-semibold">{{ fila.fk_veh_id__veh_marca }}</span>
+            <span class="texto-suave">{{ fila.cantidad }} alquiler{{ fila.cantidad|pluralize }} · {{ fila.ingresos|pesos }}</span>
+          </div>
+          {% widthratio fila.cantidad total_alquileres 100 as porcentaje %}
+          <div class="progress mb-3" role="progressbar" aria-valuenow="{{ porcentaje }}"
+               aria-valuemin="0" aria-valuemax="100" style="height:8px">
+           <div class="progress-bar"
+               data-porcentaje="{{ porcentaje }}"
+                 style="background-color: var(--azul-600)">
+                     </div>
+          </div>
+        {% empty %}
+          <div class="zona-vacia"><i class="bi bi-inbox"></i> Aún no hay alquileres registrados.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {#  ÚLTIMOS ALQUILERES  #}
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history"></i> Alquileres recientes</span>
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:lista' %}">Ver todos</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table tabla-sistema mb-0">
+          <thead>
+            <tr><th>#</th><th>Cliente</th><th>Vehículo</th><th>Inicio</th>
+              <th>Estado</th><th class="text-center">Servicios</th>
+              <th class="text-end">Total</th><th class="text-end">Acciones</th></tr>
+          </thead>
+          <tbody>
+            {% for fila in estados %}
+            {% with aq=fila.alquiler estado=fila.estado %}
+            <tr>
+              <td class="mono"><a href="{% url 'alquileres:detalle' aq.pk_alq_id %}">#{{ aq.pk_alq_id }}</a></td>
+              <td>{{ aq.fk_cli_id.cli_nombre }}</td>
+              <td class="mono">{{ aq.fk_veh_id.veh_placa }}
+                <span class="texto-suave small">({{ aq.fk_veh_id.veh_marca }})</span></td>
+              <td class="mono">{{ aq.alq_fecha_inicio|fecha_corta }}</td>
+              <td><span class="badge text-bg-{{ estado.clase }}">{{ estado.nombre }}</span></td>
+              <td class="text-center"><span class="badge badge-suave">{{ aq.detalles.count }}</span></td>
+              <td class="text-end mono fw-semibold">{{ aq.alq_total|pesos }}</td>
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:detalle' aq.pk_alq_id %}"
+                   title="Ver detalle"><i class="bi bi-eye"></i></a>
+              </td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr><td colspan="8"><div class="zona-vacia"><i class="bi bi-inbox"></i>
+              Todavía no hay alquileres. <a href="{% url 'alquileres:registrar' %}">Registre el primero</a>.
+            </div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Datos del gráfico, leídos por Chart.js #}
+<ul id="datos-meses" class="d-none">
+  {% for punto in serie_meses %}
+  <li data-etiqueta="{{ punto.etiqueta }}" data-alquileres="{{ punto.alquileres }}" data-ingresos="{{ punto.ingresos }}"></li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  document.querySelectorAll('[data-porcentaje]').forEach(function (barra) {
+    barra.style.width =
+      (parseFloat(barra.dataset.porcentaje) || 0) + '%';
+  });
+
+  const li = document.querySelectorAll('#datos-meses li');
+  const etiquetas = [];
+  const alquileres = [];
+
+  li.forEach(function (el) {
+    etiquetas.push(el.dataset.etiqueta);
+    alquileres.push(parseInt(el.dataset.alquileres, 10) || 0);
+  });
+
+  const lienzo = document.getElementById('grafico-meses');
+
+  if (!lienzo || !window.Chart || !etiquetas.length) {
+    return;
+  }
+
+  new Chart(lienzo, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [{
+        label: 'Alquileres',
+        data: alquileres,
+        backgroundColor:
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--azul-600')
+            .trim() || '#1b6ca8',
+        borderRadius: 6,
+        maxBarThickness: 46
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          },
+          grid: {
+            color: '#e6eef5'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

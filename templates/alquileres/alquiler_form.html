@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load static alquileres_extras %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+{% with es_edicion=form.instance.pk %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-{% if es_edicion %}pencil-square{% else %}file-earmark-plus{% endif %} me-1"></i>
+      {{ titulo }}{% if es_edicion %} #{{ form.instance.pk_alq_id }}{% endif %}</h1>
+    <p class="texto-suave mb-0">{{ subtitulo }}</p>
+  </div>
+  <a class="btn btn-outline-primary sin-impresion"
+     href="{% if es_edicion %}{% url 'alquileres:detalle' form.instance.pk_alq_id %}{% else %}{% url 'alquileres:lista' %}{% endif %}">
+    <i class="bi bi-arrow-left"></i> Volver
+  </a>
+</div>
+
+<form method="post" id="form-alquiler" novalidate
+      data-calculo-url="{% url 'alquileres:datos_calculo' %}">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div class="row g-3">
+    <div class="col-12 col-xl-8">
+
+      {# 1. DATOS DEL ALQUILER #}
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-1-circle"></i> Datos del alquiler</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 {% if form.fk_cli_id.errors %}campo-invalido{% endif %}">
+              <label class="form-label requerido" for="{{ form.fk_cli_id.id_for_label }}">Cliente</label>
+              {{ form.fk_cli_id }}
+              {% for e in form.fk_cli_id.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+              <div class="form-text">
+                ¿Falta? <a href="{% url 'clientes:registrar' %}"><i class="bi bi-person-plus"></i> Registre un cliente</a>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-5 {% if form.fk_veh_id.errors %}campo-invalido{% endif %}">
+              <label class="form-label requerido" for="{{ form.fk_veh_id.id_for_label }}">Vehículo</label>
+              {{ form.fk_veh_id }}
+              {% for e in form.fk_veh_id.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+              <div class="form-text">Tarifa por día: <strong id="etq-tarifa">—</strong></div>
+            </div>
+
+            <div class="col-7 col-md-4 {% if form.alq_fecha_inicio.errors %}campo-invalido{% endif %}">
+              <label class="form-label requerido" for="{{ form.alq_fecha_inicio.id_for_label }}">Fecha de inicio</label>
+              {{ form.alq_fecha_inicio }}
+              {% for e in form.alq_fecha_inicio.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="col-5 col-md-3 {% if form.dias.errors %}campo-invalido{% endif %}">
+              <label class="form-label requerido" for="{{ form.dias.id_for_label }}">Días</label>
+              {{ form.dias }}
+              {% for e in form.dias.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="col-12">
+              <div class="alert alert-light border mb-0 small d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-range text-primary"></i>
+                Periodo estimado: <strong id="etq-periodo">—</strong>
+                <span class="texto-suave">El vehículo no puede entregarse dos veces en fechas que se traslapan.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {#  2. SERVICIOS: TABLA INTERMEDIA (N:M)  #}
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-2-circle"></i> Servicios adicionales</span>
+          <span class="badge badge-suave">Alquiler ↔ Servicio (N:M)</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table tabla-sistema tabla-sm mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th style="width:45%">Servicio</th>
+                  <th style="width:15%" class="text-center">Cantidad</th>
+                  <th style="width:15%" class="text-end">Precio</th>
+                  <th style="width:15%" class="text-end">Importe</th>
+                  <th style="width:10%" class="text-center">Quitar</th>
+                </tr>
+              </thead>
+              <tbody id="cuerpo-servicios">
+                {% for f in formset %}
+                <tr class="fila-servicio">
+                  {{ f.id }}
+                  <td>{{ f.fk_ser_id }}
+                    {% for e in f.fk_ser_id.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}</td>
+                  <td class="text-center">{{ f.ase_cantidad }}</td>
+                  <td class="text-end mono precio">{{ "—" }}</td>
+                  <td class="text-end mono importe fw-semibold">{{ "—" }}</td>
+                  <td class="text-center">
+                    {% if f.instance.pk %}
+                      <label class="form-check-label small texto-suave" for="{{ f.DELETE.id_for_label }}">
+                        {{ f.DELETE }} Eliminar
+                      </label>
+                    {% else %}
+                      <span class="texto-suave">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" class="text-end texto-suave">Servicios:</th>
+                  <th class="text-end mono" id="etq-subtotal-servicios">$ 0</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+          <span class="texto-suave small">
+            Puede agregar varios servicios al mismo alquiler; cada línea guarda una fila
+            en <code>detalles_alquiler_alquilerservicio</code>.
+          </span>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-servicio">
+            <i class="bi bi-plus-lg"></i> Agregar fila
+          </button>
+        </div>
+      </div>
+
+      {# 3. SEGURO: ENTIDAD DÉBIL (1:1)  #}
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-3-circle"></i> Seguro del alquiler</span>
+          <span class="badge badge-suave">Entidad débil (1:1)</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-5 {% if form.seg_tipo.errors %}campo-invalido{% endif %}">
+              <label class="form-label" for="{{ form.seg_tipo.id_for_label }}">Tipo de seguro</label>
+              {{ form.seg_tipo }}
+              {% for e in form.seg_tipo.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-md-7 {% if form.seg_cobertura.errors %}campo-invalido{% endif %}">
+              <label class="form-label" for="{{ form.seg_cobertura.id_for_label }}">Cobertura</label>
+              {{ form.seg_cobertura }}
+              {% for e in form.seg_cobertura.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="form-text mt-2">
+            <i class="bi bi-info-circle"></i> Opcional: si escribe el tipo, escriba también la cobertura.
+            Si los deja vacíos y el alquiler ya tenía seguro, se elimina.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {#  RESUMEN / TOTAL #}
+    <div class="col-12 col-xl-4">
+      <div class="sticky-resumen">
+        <div class="card mb-3">
+          <div class="card-header"><i class="bi bi-calculator"></i> Total del alquiler</div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="texto-suave">Tarifa por día</span><span class="mono" id="sm-tarifa">—</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="texto-suave">Días</span><span class="mono" id="sm-dias">0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="texto-suave">Vehículo (tarifa × días)</span>
+                <span class="mono" id="sm-subtotal-vehiculo">$ 0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="texto-suave">Servicios</span>
+                <span class="mono" id="sm-subtotal-servicios">$ 0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0 border-top pt-2">
+                <strong style="color:var(--azul-800)">TOTAL</strong>
+                <strong class="linea-importe mono" id="sm-total">$ 0</strong>
+              </li>
+            </ul>
+            {% if es_edicion %}
+            <div class="alert alert-light border small mt-3 mb-0">
+              <i class="bi bi-arrow-repeat"></i> Total guardado actualmente:
+              <strong>{{ form.instance.alq_total|pesos }}</strong>.
+              Al guardar, el total se recalcula con la tarifa, los días y los servicios de esta pantalla.
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check2-circle"></i> {% if es_edicion %}Guardar cambios{% else %}Registrar alquiler{% endif %}
+            </button>
+            <a class="btn btn-light"
+               href="{% if es_edicion %}{% url 'alquileres:detalle' form.instance.pk_alq_id %}{% else %}{% url 'alquileres:lista' %}{% endif %}">
+              Cancelar
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body small texto-suave">
+            <strong style="color:var(--azul-800)"><i class="bi bi-diagram-3"></i> Qué se guarda aquí</strong>
+            <ul class="mb-0 mt-2 ps-3">
+              <li><code>alquileres_alquiler</code>: cliente, vehículo, fecha y total.</li>
+              <li><code>detalles_alquiler_alquilerservicio</code>: una fila por servicio (N:M).</li>
+              <li><code>seguros_seguro</code>: el seguro, si lo registra (1:1).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+{# Fila plantilla que clona el JavaScript (el __prefix__ se reemplaza al copiar) #}
+<template id="plantilla-fila-servicio">
+  <tr class="fila-servicio">
+    <td>{{ formset.empty_form.fk_ser_id }}</td>
+    <td class="text-center">{{ formset.empty_form.ase_cantidad }}</td>
+    <td class="text-end mono precio">—</td>
+    <td class="text-end mono importe fw-semibold">—</td>
+    <td class="text-center"><span class="texto-suave">—</span></td>
+  </tr>
+</template>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/alquiler.js' %}" defer></script>
+{% endblock %}

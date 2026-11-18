@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}Alquiler #{{ alquiler.pk_alq_id }}{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-file-earmark-text me-1"></i> Alquiler #{{ alquiler.pk_alq_id }}</h1>
+    <p class="texto-suave mb-0">
+      Registrado el {{ alquiler.alq_fecha_inicio|fecha_corta }} ·
+      <span class="badge text-bg-{{ estado.clase }}"><i class="bi {{ estado.icono }}"></i> {{ estado.nombre }}</span>
+    </p>
+  </div>
+  <div class="d-flex gap-2 sin-impresion">
+    <a class="btn btn-outline-primary" href="{% url 'alquileres:lista' %}"><i class="bi bi-arrow-left"></i> Volver</a>
+    <button class="btn btn-outline-primary" onclick="window.print()" type="button">
+      <i class="bi bi-printer"></i> Imprimir
+    </button>
+    {% if perms.alquileres.change_alquiler %}
+    <a class="btn btn-primary" href="{% url 'alquileres:editar' alquiler.pk_alq_id %}">
+      <i class="bi bi-pencil"></i> Editar
+    </a>
+    {% endif %}
+    {% if perms.alquileres.delete_alquiler %}
+    <a class="btn btn-peligro" href="{% url 'alquileres:eliminar' alquiler.pk_alq_id %}">
+      <i class="bi bi-trash3"></i> Eliminar
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  {#  FICHA DEL REGISTRO  #}
+  <div class="col-12 col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-person-vcard"></i> Cliente</div>
+      <div class="card-body">
+        <div class="fw-semibold fs-6">{{ alquiler.fk_cli_id.cli_nombre }}</div>
+        <div class="texto-suave small mono">{{ alquiler.fk_cli_id.cli_documento }}</div>
+        <div class="texto-suave small"><i class="bi bi-telephone"></i> {{ alquiler.fk_cli_id.cli_telefono }}</div>
+        <a class="btn btn-sm btn-outline-primary mt-2 sin-impresion"
+           href="{% url 'clientes:detalle' alquiler.fk_cli_id.pk_cli_id %}">
+          Ver ficha del cliente
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-car-front"></i> Vehículo</div>
+      <div class="card-body">
+        <div class="fw-semibold fs-6 mono">{{ alquiler.fk_veh_id.veh_placa }}</div>
+        <div class="texto-suave small">{{ alquiler.fk_veh_id.veh_marca }}</div>
+        <div class="mt-1">Tarifa por día: <strong>{{ alquiler.fk_veh_id.veh_tarifa_dia|pesos }}</strong></div>
+        <a class="btn btn-sm btn-outline-primary mt-2 sin-impresion"
+           href="{% url 'vehiculos:detalle' alquiler.fk_veh_id.pk_veh_id %}">
+          Ver ficha del vehículo
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-calendar3"></i> Periodo</div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0 small">
+          <li class="d-flex justify-content-between py-1">
+            <span class="texto-suave">Inicio</span><span class="mono fw-semibold">{{ alquiler.alq_fecha_inicio|fecha_corta }}</span>
+          </li>
+          <li class="d-flex justify-content-between py-1">
+            <span class="texto-suave">Devolución estimada</span>
+            <span class="mono fw-semibold">{{ estado.fecha_fin|fecha_corta }}</span>
+          </li>
+          <li class="d-flex justify-content-between py-1">
+            <span class="texto-suave">Días</span>
+            <span class="mono fw-semibold">
+              {% if estado.dias_aproximados %}~{% endif %}{{ estado.dias|default:"—" }}
+            </span>
+          </li>
+          <li class="d-flex justify-content-between py-1">
+            <span class="texto-suave">Servicios contratados</span>
+            <span class="mono fw-semibold">{{ alquiler.detalles.count }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {#  SERVICIOS (TABLA INTERMEDIA N:M) #}
+  <div class="col-12 col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cone-striped"></i> Servicios adicionales</span>
+        <span class="badge badge-suave">tabla intermedia Alquiler ↔ Servicio</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table tabla-sistema tabla-sm mb-0">
+          <thead>
+            <tr>
+              <th>#</th><th>Servicio</th><th class="text-center">Cantidad</th>
+              <th class="text-end">Precio</th><th class="text-end">Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in servicios %}
+            <tr>
+              <td class="mono">{{ forloop.counter }}</td>
+              <td>{{ d.fk_ser_id.ser_nombre }}</td>
+              <td class="text-center mono">{{ d.ase_cantidad }}</td>
+              <td class="text-end mono">{{ d.fk_ser_id.ser_precio|pesos }}</td>
+              <td class="text-end mono fw-semibold">{{ d.ase_cantidad|por:d.fk_ser_id.ser_precio|pesos }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="zona-vacia py-4">
+                  <i class="bi bi-inbox"></i> Este alquiler no tiene servicios adicionales.
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end texto-suave">Subtotal de servicios</th>
+              <th class="text-end mono">{{ estado.subtotal_servicios|pesos }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    {#  SEGURO (1:1) #}
+    <div class="card">
+      <div class="card-header"><i class="bi bi-shield-check"></i> Seguro &mdash; entidad débil (1:1)</div>
+      <div class="card-body">
+        {% if alquiler.seguro %}
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="texto-suave small">Tipo</div>
+            <div class="fw-semibold">{{ alquiler.seguro.seg_tipo }}</div>
+          </div>
+          <div class="col-12 col-md-8">
+            <div class="texto-suave small">Cobertura</div>
+            <div>{{ alquiler.seguro.seg_cobertura|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="form-text mt-2">
+          <i class="bi bi-info-circle"></i> El seguro depende del alquiler: si se elimina el
+          alquiler (#{{ alquiler.pk_alq_id }}), su seguro se elimina con él (<code>CASCADE</code>).
+        </div>
+        {% else %}
+        <div class="zona-vacia py-3">
+          <i class="bi bi-shield-x"></i> Sin seguro registrado.
+          {% if perms.alquileres.change_alquiler %}
+          <div class="mt-2">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:editar' alquiler.pk_alq_id %}">
+              <i class="bi bi-plus-lg"></i> Agregar seguro
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {#  TOTALES #}
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-calculator"></i> liquidación</div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="texto-suave">Vehículo × días</span>
+            <span class="mono">{{ estado.subtotal_vehiculo|pesos }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="texto-suave">Servicios</span>
+            <span class="mono">{{ estado.subtotal_servicios|pesos }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0 border-top pt-3">
+            <strong style="color:var(--azul-800)">TOTAL DEL ALQUILER</strong>
+            <strong class="linea-importe mono">{{ alquiler.alq_total|pesos }}</strong>
+          </li>
+        </ul>
+      </div>
+      <div class="card-footer bg-white small texto-suave">
+        Total guardado en <code>alquileres_alquiler.alq_total</code>.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

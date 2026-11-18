@@ -1,0 +1,36 @@
+{# Menú lateral (aside). Se incluye en el aside de escritorio y en el offcanvas móvil. #}
+{% with activa=request.resolver_match %}
+<ul class="nav flex-column">
+  <li><span class="grupo">General</span></li>
+  <li><a class="nav-link {% if activa.url_name == 'dashboard' %}activo{% endif %}"
+         href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Tablero</a></li>
+
+  <li><span class="grupo">Proceso de alquiler</span></li>
+  <li><a class="nav-link {% if 'alquileres' in activa.app_names %}activo{% endif %}"
+         href="{% url 'alquileres:lista' %}"><i class="bi bi-file-earmark-text"></i> Alquileres</a></li>
+  <li><a class="nav-link {% if activa.url_name == 'registrar' and 'alquileres' in activa.app_names %}activo{% endif %}"
+         href="{% url 'alquileres:registrar' %}"><i class="bi bi-plus-circle"></i> Registrar alquiler</a></li>
+
+  <li><span class="grupo">Catálogos</span></li>
+  <li><a class="nav-link {% if 'clientes' in activa.app_names %}activo{% endif %}"
+         href="{% url 'clientes:lista' %}"><i class="bi bi-person-vcard"></i> Clientes</a></li>
+  <li><a class="nav-link {% if 'vehiculos' in activa.app_names %}activo{% endif %}"
+         href="{% url 'vehiculos:lista' %}"><i class="bi bi-car-front"></i> Vehículos</a></li>
+  <li><a class="nav-link {% if 'servicios' in activa.app_names %}activo{% endif %}"
+         href="{% url 'servicios:lista' %}"><i class="bi bi-cone-striped"></i> Servicios</a></li>
+
+  <li><span class="grupo">Cuenta</span></li>
+  {% if user.is_staff %}
+  <li><a class="nav-link" href="/admin/"><i class="bi bi-sliders"></i> Panel de administración</a></li>
+  {% endif %}
+  <li>
+    <form method="post" action="{% url 'logout' %}" class="px-3 py-1 m-0">
+      {% csrf_token %}
+      <button type="submit" class="nav-link btn btn-link p-0 text-start"
+              style="color:#cdd8e2">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </button>
+    </form>
+  </li>
+</ul>
+{% endwith %}

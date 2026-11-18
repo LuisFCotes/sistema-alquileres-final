@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Iniciar sesión{% endblock %}
+
+{# La pantalla de acceso no muestra navbar ni menú lateral #}
+{% block navbar %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center align-items-center min-vh-100 py-4">
+  <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+    <div class="text-center mb-4">
+      <i class="bi bi-car-front-fill" style="font-size:2.6rem;color:var(--azul-800)"></i>
+      <h1 class="h4 mt-2 mb-1">Sistema de Alquileres de Vehículos</h1>
+      <p class="texto-suave mb-0">Ingrese con su usuario para registrar y consultar alquileres</p>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small">
+              {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label requerido" for="{{ form.username.id_for_label }}">Usuario</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" id="{{ form.username.id_for_label }}"
+                     class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                     value="{{ form.username.value|default:'' }}" autocomplete="username"
+                     placeholder="admin" required autofocus>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label requerido" for="{{ form.password.id_for_label }}">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" id="{{ form.password.id_for_label }}"
+                     class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                     autocomplete="current-password" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <input type="hidden" name="next" value="{{ next }}">
+
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-box-arrow-in-right"></i> Ingresar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body small texto-suave">
+        <strong class="d-block mb-1" style="color:var(--azul-800)">
+          <i class="bi bi-key"></i> Usuarios de prueba
+        </strong>
+        <div class="row g-2 mono">
+          <div class="col-4"><code>admin</code><br><span class="badge badge-suave">superusuario</span></div>
+          <div class="col-4"><code>vendedor</code><br><span class="badge badge-suave">registra</span></div>
+          <div class="col-4"><code>consultor</code><br><span class="badge badge-suave">solo lee</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}{{ vehiculo.veh_placa }}{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-car-front me-1"></i> {{ vehiculo.veh_marca }} · {{ vehiculo.veh_placa }}</h1>
+    <p class="texto-suave mb-0">Vehículo #{{ vehiculo.pk_veh_id }} · tarifa por día {{ vehiculo.veh_tarifa_dia|pesos }}</p>
+  </div>
+  <div class="d-flex gap-2 sin-impresion">
+    <a class="btn btn-outline-primary" href="{% url 'vehiculos:lista' %}"><i class="bi bi-arrow-left"></i> Volver</a>
+    {% if perms.vehiculos.change_vehiculo %}
+    <a class="btn btn-primary" href="{% url 'vehiculos:editar' vehiculo.pk_veh_id %}"><i class="bi bi-pencil"></i> Editar</a>
+    {% endif %}
+    {% if perms.vehiculos.delete_vehiculo %}
+    <a class="btn btn-peligro" href="{% url 'vehiculos:eliminar' vehiculo.pk_veh_id %}"><i class="bi bi-trash3"></i> Eliminar</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-4">
+    <div class="card kpi h-100"><div class="card-body">
+      <div class="etiqueta">Tarifa por día</div><div class="valor">{{ vehiculo.veh_tarifa_dia|pesos }}</div>
+      <div class="texto-suave small">5 días ≈ {{ vehiculo.veh_tarifa_dia|por:5|pesos }}</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi kpi-acento h-100"><div class="card-body">
+      <div class="etiqueta">Veces alquilado</div><div class="valor">{{ alquileres|length }}</div>
+      <div class="texto-suave small">alquileres registrados</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi kpi-exito h-100"><div class="card-body">
+      <div class="etiqueta">Ingresos generados</div><div class="valor">{{ total_vehiculo|pesos }}</div>
+      <div class="texto-suave small">suma de los totales</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history"></i> Alquileres de este vehículo</span>
+    {% if perms.alquileres.add_alquiler %}
+    <a class="btn btn-sm btn-acento" href="{% url 'alquileres:registrar' %}"><i class="bi bi-plus-lg"></i> Alquilar</a>
+    {% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table tabla-sistema tabla-sm mb-0">
+      <thead><tr><th>#</th><th>Cliente</th><th>Inicio</th><th>Estado</th>
+        <th class="text-center">Servicios</th><th class="text-end">Total</th><th></th></tr></thead>
+      <tbody>
+        {% for aq in alquileres %}
+        {% with estado=aq|estado_alquiler %}
+        <tr>
+          <td class="mono">#{{ aq.pk_alq_id }}</td>
+          <td>{{ aq.fk_cli_id.cli_nombre }}</td>
+          <td class="mono">{{ aq.alq_fecha_inicio|fecha_corta }}</td>
+          <td><span class="badge text-bg-{{ estado.clase }}">{{ estado.nombre }}</span></td>
+          <td class="text-center">{{ aq.detalles.count }}</td>
+          <td class="text-end mono fw-semibold">{{ aq.alq_total|pesos }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:detalle' aq.pk_alq_id %}"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="7"><div class="zona-vacia"><i class="bi bi-inbox"></i> Este vehículo no ha sido alquilado todavía.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

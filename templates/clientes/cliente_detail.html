@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}{{ cliente.cli_nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-person-vcard me-1"></i> {{ cliente.cli_nombre }}</h1>
+    <p class="texto-suave mb-0">Cliente #{{ cliente.pk_cli_id }} · documento {{ cliente.cli_documento }}</p>
+  </div>
+  <div class="d-flex gap-2 sin-impresion">
+    <a class="btn btn-outline-primary" href="{% url 'clientes:lista' %}"><i class="bi bi-arrow-left"></i> Volver</a>
+    {% if perms.clientes.change_cliente %}
+    <a class="btn btn-primary" href="{% url 'clientes:editar' cliente.pk_cli_id %}"><i class="bi bi-pencil"></i> Editar</a>
+    {% endif %}
+    {% if perms.clientes.delete_cliente %}
+    <a class="btn btn-peligro" href="{% url 'clientes:eliminar' cliente.pk_cli_id %}"><i class="bi bi-trash3"></i> Eliminar</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-4">
+    <div class="card h-100"><div class="card-header"><i class="bi bi-card-text"></i> Datos</div>
+      <div class="card-body small">
+        <div class="texto-suave">Documento</div><div class="mono fw-semibold mb-2">{{ cliente.cli_documento }}</div>
+        <div class="texto-suave">Teléfono</div><div class="mono fw-semibold mb-2">{{ cliente.cli_telefono }}</div>
+        <div class="texto-suave">Correo / dirección</div>
+        <div class="texto-suave small">No hacen parte de la tabla <code>clientes_cliente</code> del segundo corte.</div>
+      </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi kpi-exito h-100"><div class="card-body">
+      <div class="etiqueta">Alquileres</div><div class="valor">{{ alquileres|length }}</div>
+      <div class="texto-suave small">registros del proceso asociados</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi h-100"><div class="card-body">
+      <div class="etiqueta">Total girado</div><div class="valor">{{ total_cliente|pesos }}</div>
+      <div class="texto-suave small">suma de <code>alq_total</code></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-file-earmark-text"></i> Historia de alquileres</span>
+    {% if perms.alquileres.add_alquiler %}
+    <a class="btn btn-sm btn-acento" href="{% url 'alquileres:registrar' %}">
+      <i class="bi bi-plus-lg"></i> Nuevo alquiler
+    </a>
+    {% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table tabla-sistema tabla-sm mb-0">
+      <thead><tr><th>#</th><th>Vehículo</th><th>Inicio</th><th>Estado</th>
+        <th class="text-center">Servicios</th><th>Seguro</th><th class="text-end">Total</th><th></th></tr></thead>
+      <tbody>
+        {% for aq in alquileres %}
+        {% with estado=aq|estado_alquiler %}
+        <tr>
+          <td class="mono">#{{ aq.pk_alq_id }}</td>
+          <td class="mono">{{ aq.fk_veh_id.veh_placa }} <span class="texto-suave small">{{ aq.fk_veh_id.veh_marca }}</span></td>
+          <td class="mono">{{ aq.alq_fecha_inicio|fecha_corta }}</td>
+          <td><span class="badge text-bg-{{ estado.clase }}">{{ estado.nombre }}</span></td>
+          <td class="text-center">{{ aq.detalles.count }}</td>
+          <td>{% if aq.seguro %}<i class="bi bi-shield-check text-success"></i> {{ aq.seguro.seg_tipo }}{% else %}<span class="texto-suave">—</span>{% endif %}</td>
+          <td class="text-end mono fw-semibold">{{ aq.alq_total|pesos }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:detalle' aq.pk_alq_id %}"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="8"><div class="zona-vacia"><i class="bi bi-inbox"></i> Este cliente aún no tiene alquileres.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

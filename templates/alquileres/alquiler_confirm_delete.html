@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}Eliminar alquiler #{{ alquiler.pk_alq_id }}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0" style="box-shadow:var(--sombra-alta)">
+      <div class="card-header bg-white text-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i> Confirmar eliminación
+      </div>
+      <div class="card-body">
+        <p>¿Desea eliminar definitivamente el <strong>alquiler #{{ alquiler.pk_alq_id }}</strong>?</p>
+
+        <div class="p-3 rounded-3 mb-3" style="background:var(--azul-100)">
+          <div class="row g-2 small">
+            <div class="col-6"><span class="texto-suave d-block">Cliente</span>
+              <strong>{{ alquiler.fk_cli_id.cli_nombre }}</strong></div>
+            <div class="col-6"><span class="texto-suave d-block">Vehículo</span>
+              <strong class="mono">{{ alquiler.fk_veh_id.veh_placa }}</strong> ({{ alquiler.fk_veh_id.veh_marca }})</div>
+            <div class="col-6"><span class="texto-suave d-block">Inicio</span>
+              <strong class="mono">{{ alquiler.alq_fecha_inicio|fecha_corta }}</strong></div>
+            <div class="col-6"><span class="texto-suave d-block">Total</span>
+              <strong class="mono">{{ alquiler.alq_total|pesos }}</strong></div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning small">
+          <i class="bi bi-diagram-3"></i> Al ser el registro padre del proceso, también se eliminarán:
+          <ul class="mb-0 mt-2 ps-3">
+            <li><strong>{{ alquiler.detalles.count }}</strong> servicio(s) en la tabla intermedia
+              <code>detalles_alquiler_alquilerservicio</code> (regla <code>CASCADE</code>).</li>
+            <li>{% if alquiler.seguro %}el seguro «{{ alquiler.seguro.seg_tipo }}» (entidad débil, 1:1).
+              {% else %}ningún seguro: este alquiler no tiene.{% endif %}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+        <a class="btn btn-light" href="{% url 'alquileres:detalle' alquiler.pk_alq_id %}">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </a>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-peligro">
+            <i class="bi bi-trash3"></i> Sí, eliminar el alquiler
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

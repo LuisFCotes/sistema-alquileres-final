@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}Vehículos{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-car-front me-1"></i> {{ titulo_pagina }}</h1>
+    <p class="texto-suave mb-0">Flota disponible con su tarifa por día.</p>
+  </div>
+  {% if perms.vehiculos.add_vehiculo %}
+  <a class="btn btn-acento" href="{% url 'vehiculos:registrar' %}"><i class="bi bi-plus-lg"></i> Nuevo vehículo</a>
+  {% endif %}
+</div>
+
+<div class="card mb-3 sin-impresion">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="search" name="q" class="form-control" value="{{ consulta }}"
+                 placeholder="Placa o marca">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-3">
+        <select name="marca" class="form-select form-select-sm">
+          <option value="">Todas las marcas</option>
+          {% for m in marcas %}
+          <option value="{{ m }}" {% if request.GET.marca == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto"><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button></div>
+      {% if consulta or request.GET.marca %}
+      <div class="col-auto"><a class="btn btn-sm btn-light" href="{% url 'vehiculos:lista' %}">Limpiar</a></div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-table"></i> Flota</span>
+    <span class="badge badge-suave">{{ paginator.count }} vehículo{{ paginator.count|pluralize }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table tabla-sistema mb-0">
+      <thead><tr><th>ID</th><th>Placa</th><th>Marca</th><th class="text-end">Tarifa / día</th>
+        <th class="text-center">Alquileres</th><th class="text-end">Girado</th><th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+        {% for v in vehiculos %}
+        <tr>
+          <td class="mono"><a href="{% url 'vehiculos:detalle' v.pk_veh_id %}">#{{ v.pk_veh_id }}</a></td>
+          <td class="mono fw-semibold">{{ v.veh_placa }}</td>
+          <td>{{ v.veh_marca }}</td>
+          <td class="text-end mono">{{ v.veh_tarifa_dia|pesos }}</td>
+          <td class="text-center"><span class="badge badge-suave">{{ v.num_alquileres }}</span></td>
+          <td class="text-end mono">{{ v.total_girado|pesos }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'vehiculos:detalle' v.pk_veh_id %}" title="Ver"><i class="bi bi-eye"></i></a>
+            {% if perms.vehiculos.change_vehiculo %}
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'vehiculos:editar' v.pk_veh_id %}" title="Editar"><i class="bi bi-pencil"></i></a>
+            {% endif %}
+            {% if perms.vehiculos.delete_vehiculo %}
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'vehiculos:eliminar' v.pk_veh_id %}" title="Eliminar"><i class="bi bi-trash3"></i></a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="zona-vacia"><i class="bi bi-inbox"></i> No hay vehículos con ese criterio.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-body pt-0">{% include "partials/_paginacion.html" %}</div>
+</div>
+{% endblock %}

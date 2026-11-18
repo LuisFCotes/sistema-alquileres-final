@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}{{ servicio.ser_nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-cone-striped me-1"></i> {{ servicio.ser_nombre }}</h1>
+    <p class="texto-suave mb-0">Servicio #{{ servicio.pk_ser_id }} · precio {{ servicio.ser_precio|pesos }}</p>
+  </div>
+  <div class="d-flex gap-2 sin-impresion">
+    <a class="btn btn-outline-primary" href="{% url 'servicios:lista' %}"><i class="bi bi-arrow-left"></i> Volver</a>
+    {% if perms.servicios.change_servicio %}
+    <a class="btn btn-primary" href="{% url 'servicios:editar' servicio.pk_ser_id %}"><i class="bi bi-pencil"></i> Editar</a>
+    {% endif %}
+    {% if perms.servicios.delete_servicio %}
+    <a class="btn btn-peligro" href="{% url 'servicios:eliminar' servicio.pk_ser_id %}"><i class="bi bi-trash3"></i> Eliminar</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-4">
+    <div class="card kpi h-100"><div class="card-body">
+      <div class="etiqueta">Precio</div><div class="valor">{{ servicio.ser_precio|pesos }}</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi kpi-acento h-100"><div class="card-body">
+      <div class="etiqueta">Unidades vendidas</div><div class="valor">{{ unidades }}</div>
+      <div class="texto-suave small">en {{ detalles|length }} alquiler(es)</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card kpi kpi-exito h-100"><div class="card-body">
+      <div class="etiqueta">Recaudo del servicio</div><div class="valor">{{ recaudo|pesos }}</div>
+      <div class="texto-suave small">precio × unidades</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="bi bi-diagram-3"></i> Dónde se usó (tabla intermedia)</div>
+  <div class="table-responsive">
+    <table class="table tabla-sistema tabla-sm mb-0">
+      <thead><tr><th>Alquiler</th><th>Cliente</th><th>Vehículo</th><th>Inicio</th>
+        <th class="text-center">Cantidad</th><th class="text-end">Importe</th><th></th></tr></thead>
+      <tbody>
+        {% for d in detalles %}
+        <tr>
+          <td class="mono">#{{ d.fk_alq_id.pk_alq_id }}</td>
+          <td>{{ d.fk_alq_id.fk_cli_id.cli_nombre }}</td>
+          <td class="mono">{{ d.fk_alq_id.fk_veh_id.veh_placa }}</td>
+          <td class="mono">{{ d.fk_alq_id.alq_fecha_inicio|fecha_corta }}</td>
+          <td class="text-center mono">{{ d.ase_cantidad }}</td>
+          <td class="text-end mono fw-semibold">{{ d.ase_cantidad|por:servicio.ser_precio|pesos }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'alquileres:detalle' d.fk_alq_id.pk_alq_id %}"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="zona-vacia"><i class="bi bi-inbox"></i> Este servicio aún no se ha contratado.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

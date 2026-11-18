@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}Servicios{% endblock %}
+
+{% block contenido %}
+<div class="cabecera-pagina">
+  <div>
+    <h1><i class="bi bi-cone-striped me-1"></i> {{ titulo_pagina }}</h1>
+    <p class="texto-suave mb-0">Catálogo que se enlaza con los alquileres por la tabla intermedia (N:M).</p>
+  </div>
+  {% if perms.servicios.add_servicio %}
+  <a class="btn btn-acento" href="{% url 'servicios:registrar' %}"><i class="bi bi-plus-lg"></i> Nuevo servicio</a>
+  {% endif %}
+</div>
+
+<div class="card mb-3 sin-impresion">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-12 col-md-8 col-lg-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="search" name="q" class="form-control" value="{{ consulta }}" placeholder="Nombre del servicio">
+        </div>
+      </div>
+      <div class="col-auto"><button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-funnel"></i> Buscar</button></div>
+      {% if consulta %}<div class="col-auto"><a class="btn btn-sm btn-light" href="{% url 'servicios:lista' %}">Limpiar</a></div>{% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-table"></i> Catálogo</span>
+    <span class="badge badge-suave">{{ paginator.count }} servicio{{ paginator.count|pluralize }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table tabla-sistema mb-0">
+      <thead><tr><th>ID</th><th>Servicio</th><th class="text-end">Precio</th>
+        <th class="text-center">Contratado en</th><th class="text-center">Unidades</th>
+        <th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+        {% for s in servicios %}
+        <tr>
+          <td class="mono"><a href="{% url 'servicios:detalle' s.pk_ser_id %}">#{{ s.pk_ser_id }}</a></td>
+          <td class="fw-semibold">{{ s.ser_nombre }}</td>
+          <td class="text-end mono">{{ s.ser_precio|pesos }}</td>
+          <td class="text-center"><span class="badge badge-suave">{{ s.veces_vendido }} alquiler{{ s.veces_vendido|pluralize }}</span></td>
+          <td class="text-center mono">{{ s.unidades|default:0 }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'servicios:detalle' s.pk_ser_id %}" title="Ver"><i class="bi bi-eye"></i></a>
+            {% if perms.servicios.change_servicio %}
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'servicios:editar' s.pk_ser_id %}" title="Editar"><i class="bi bi-pencil"></i></a>
+            {% endif %}
+            {% if perms.servicios.delete_servicio %}
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'servicios:eliminar' s.pk_ser_id %}" title="Eliminar"><i class="bi bi-trash3"></i></a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="zona-vacia"><i class="bi bi-inbox"></i> El catálogo está vacío.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-body pt-0">{% include "partials/_paginacion.html" %}</div>
+</div>
+{% endblock %}

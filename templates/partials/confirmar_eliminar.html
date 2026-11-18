@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load alquileres_extras %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0" style="box-shadow:var(--sombra-alta)">
+      <div class="card-header bg-white text-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ titulo|default:"Eliminar registro" }}
+      </div>
+      <div class="card-body">
+        <p class="mb-3">
+          ¿Está seguro de que desea <strong class="text-danger">eliminar</strong>
+          el siguiente registro del sistema?
+        </p>
+
+        <div class="p-3 rounded-3 mb-3" style="background:var(--azul-100)">
+          <div class="fw-semibold" style="color:var(--azul-800)">{{ nombre_objeto }}</div>
+          {% block detalle_objeto %}{% endblock %}
+        </div>
+
+        {% if relacionados %}
+        <ul class="list-group list-group-flush mb-3">
+          {% for etiqueta, cantidad in relacionados %}
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <span class="texto-suave">{{ etiqueta }}</span>
+            <span class="badge {% if cantidad %}badge-acento{% else %}badge-suave{% endif %}">
+              {{ cantidad }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="alert alert-warning small mb-0">
+          <i class="bi bi-info-circle"></i>
+          Esta acción no se puede deshacer. Si el registro tiene alquileres asociados,
+          la base de datos lo protegerá (regla <code>PROTECT</code> de las llaves foráneas)
+          y el sistema le avisará qué debe resolver primero.
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+        <a class="btn btn-light" href="{{ request.META.HTTP_REFERER|default:'/' }}">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </a>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-peligro">
+            <i class="bi bi-trash3"></i> Sí, eliminar definitivamente
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Acceso restringido{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card text-center">
+      <div class="card-body p-5">
+        <i class="bi bi-shield-lock" style="font-size:3rem;color:var(--peligro)"></i>
+        <h1 class="h4 mt-3">Acceso restringido</h1>
+        <p class="texto-suave">
+          Su usuario ({% if user.is_authenticated %}{{ user.get_username }}{% else %}sin sesión{% endif %})
+          no tiene el permiso necesario para esta acción.<br>
+          Los roles del sistema limitan qué puede hacer cada actor: si necesita esta función,
+          pídasela a un superusuario desde el panel de administración.
+        </p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <a class="btn btn-primary" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2"></i> Ir al tablero
+          </a>
+          <a class="btn btn-outline-primary" href="{% url 'alquileres:lista' %}">
+            <i class="bi bi-file-earmark-text"></i> Ver alquileres
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
