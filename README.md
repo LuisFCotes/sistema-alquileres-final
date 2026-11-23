@@ -46,9 +46,9 @@ proceso), área de consulta y reportes (solo lectura), y administrador del
 sistema (catálogos, usuarios, roles y panel de administración).
 
 ## Integrantes
-- Luis Felipe Cotes – _usuario de GitHub:_ `@______`
-- Alana Marcela Lemus Mendoza – _usuario de GitHub:_ `@______`
-- Samir Iguaran – _usuario de GitHub:_ `@______`
+- Luis Felipe Cotes 
+- Alana Marcela Lemus Mendoza 
+- Samir Iguaran 
 
 > ⚠️ Ajusten los tres usuarios de GitHub y la URL del repositorio antes de subir
 > el commit del tercer corte.
@@ -59,7 +59,7 @@ sistema (catálogos, usuarios, roles y panel de administración).
 |---|---|
 | **Django 5.2.18** | Backend, modelos, ORM, vistas y formularios |
 | **django-jazzmin 3.0.5** | Tema del panel de administración (segundo corte) |
-| **Bootstrap 5.3.3** | Framework de CSS de la interfaz, **incluido por CDN** (`bootstrap.min.css` + `bootstrap.bundle.min.js` en `templates/base.html`) |
+| **Bootstrap 5.3.3** | Framework de CSS de la interfaz, **incluido por CDN** 
 | **Bootstrap Icons 1.11.3** | Iconografía de la interfaz, **por CDN** |
 | **Chart.js 4.4.3** | Gráfico de alquileres por mes del tablero, **por CDN** |
 | **Python 3.10+** | Lenguaje del servidor |
@@ -94,7 +94,7 @@ sistema-alquileres-final/
 │   ├── urls.py              # incluye una url por app + /admin/ + /accounts/
 │   ├── mixins.py            # mixin de borrado protegido y de contexto
 │   └── vistas.py            # página 403 personalizada
-├── alquileres/              # ⭐ proceso principal (CRUD completo)
+├── alquileres/              # proceso principal (CRUD completo)
 │   ├── forms.py             # AlquilerForm + formset de servicios (N:M)
 │   ├── logica.py            # cálculo de total, días, estado y traslapes
 │   ├── views.py             # tablero, listar, crear, detalle, editar, eliminar
